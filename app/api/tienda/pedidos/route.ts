@@ -1,0 +1,75 @@
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+
+export async function POST(req: Request) {
+  const session = await auth();
+  const { items, metodoPago, direccionEnvio, nombreInvitado, telefonoInvitado, emailInvitado } = await req.json();
+
+  if (!items || items.length === 0) {
+    return NextResponse.json({ error: "El carrito está vacío" }, { status: 400 });
+  }
+  if (!session?.user && (!nombreInvitado || !telefonoInvitado)) {
+    return NextResponse.json({ error: "Faltan tus datos de contacto" }, { status: 400 });
+  }
+  if (!direccionEnvio) {
+    return NextResponse.json({ error: "Falta la dirección de envío" }, { status: 400 });
+  }
+
+  try {
+    const pedido = await prisma.$transaction(async (tx) => {
+      let subtotal = 0;
+      const itemsData = [];
+
+      for (const item of items) {
+        const variante = await tx.productoVariante.findUnique({
+          where: { sku: item.sku },
+          include: { producto: true, color: true, talla: true },
+        });
+        if (!variante) throw new Error(`Producto no encontrado: ${item.sku}`);
+        if (variante.stockActual < item.cantidad) {
+          throw new Error(`"${variante.producto.nombre}" ya no tiene stock suficiente (disponible: ${variante.stockActual})`);
+        }
+
+        const precioUnitario = Number(variante.precioVenta);
+        const cantidadSubtotal = precioUnitario * item.cantidad;
+        subtotal += cantidadSubtotal;
+
+        itemsData.push({
+          varianteId: variante.id,
+          productoId: variante.productoId,
+          nombreSnapshot: variante.producto.nombre,
+          colorSnapshot: variante.color?.nombre ?? null,
+          tallaSnapshot: variante.talla?.sigla ?? null,
+          precioUnitario,
+          cantidad: item.cantidad,
+          subtotal: cantidadSubtotal,
+        });
+      }
+
+      const count = await tx.pedido.count();
+      const referencia = `PED-${String(count + 1).padStart(5, "0")}`;
+
+      return tx.pedido.create({
+        data: {
+          referencia,
+          clienteId: session?.user ? Number((session.user as any).id) : null,
+          nombreInvitado: session?.user ? session.user.name : nombreInvitado,
+          telefonoInvitado,
+          emailInvitado: session?.user ? session.user.email : emailInvitado,
+          direccionEnvio,
+          metodoPago,
+          subtotal,
+          total: subtotal,
+          estado: "PENDIENTE",
+          items: { create: itemsData },
+        },
+        include: { items: true },
+      });
+    });
+
+    return NextResponse.json(pedido, { status: 201 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 400 });
+  }
+}

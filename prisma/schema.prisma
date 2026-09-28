@@ -1,0 +1,457 @@
+// ============================================================================
+// SCHEMA OPTIMIZADO - Migración desde Strapi (Jacquard)
+// ============================================================================
+// Este archivo reemplaza 77 tablas de Strapi por ~17 modelos limpios.
+// Cada modelo indica en un comentario qué tablas de Strapi reemplaza.
+//
+// Cómo usarlo:
+//   1. npx prisma init  (crea carpeta prisma/ y .env)
+//   2. Pega este contenido en prisma/schema.prisma
+//   3. Pon tu connection string de Neon en DATABASE_URL (.env)
+//   4. npx prisma migrate dev --name init
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Desde Prisma 7, la URL de conexión NO va aquí: se configura en
+  // prisma.config.ts (bloque `datasource: { url: env("DATABASE_URL") }`).
+}
+
+// ----------------------------------------------------------------------------
+// CATÁLOGO
+// ----------------------------------------------------------------------------
+
+/// Reemplaza: categoria
+model Categoria {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255) // nuevo: necesario para URLs SEO en Next.js
+  descripcion String?  @db.VarChar(255)
+  activo      Boolean  @default(true)
+  grupos      GrupoProducto[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("categorias")
+}
+
+/// Reemplaza: grupos_productos, grupos_productos_categoria_links
+/// Nota: se simplificó de M2M a 1-N (un grupo pertenece a UNA categoría).
+/// Si de verdad necesitas que un grupo esté en varias categorías, dímelo y
+/// lo regreso a M2M (Prisma lo maneja mucho más simple que Strapi de todas formas).
+model GrupoProducto {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255)
+  descripcion String?
+  prefijoCodigo String? @map("prefijo_codigo") @db.VarChar(10) // ej. "CML" para generar códigos CML-001, CML-002...
+  activo      Boolean  @default(true)
+  categoriaId Int?     @map("categoria_id")
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  productos   Producto[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([categoriaId])
+  @@map("grupos_productos")
+}
+
+/// Reemplaza: colores, colores_productos_links (pasa a relación directa vía ProductoVariante)
+model Color {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(255)
+  hex       String?  @db.VarChar(7) // antes "color_rgb"
+  variantes ProductoVariante[]
+  imagenes  ProductoImagen[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("colores")
+}
+
+/// Reemplaza: tallas, productos_tallas_links (pasa a relación directa vía ProductoVariante)
+model Talla {
+  id          Int      @id @default(autoincrement())
+  sigla       String   @unique @db.VarChar(10) // "S", "M", "L", "XL"...
+  descripcion String?  @db.VarChar(255)
+  orden       Int      @default(0) // nuevo: para ordenar S,M,L,XL en vez de alfabético
+  variantes   ProductoVariante[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("tallas")
+}
+
+/// Reemplaza: productos
+/// Este es el "producto padre" (ej. "Chompa Jacquard modelo X").
+/// Ya NO guarda precio ni stock aquí — eso vive en ProductoVariante.
+model Producto {
+  id             Int      @id @default(autoincrement())
+  codigo         String   @unique @db.VarChar(255) // antes sin unique: permitía duplicados
+  slug           String   @unique @db.VarChar(255) // nuevo: para /productos/[slug] en Next.js
+  nombre         String   @db.VarChar(255)
+  descripcion    String?
+  observaciones  String?
+  guiaCodigos    String?  @map("guia_codigos")
+  activo         Boolean  @default(true)
+  valoracion     Decimal? @db.Decimal(3, 2)
+  fechaDisponible DateTime? @map("fecha_disponible") @db.Date
+
+  grupoId  Int?           @map("grupo_producto_id")
+  grupo    GrupoProducto? @relation(fields: [grupoId], references: [id], onDelete: Restrict)
+
+  variantes ProductoVariante[]
+  imagenes  ProductoImagen[]
+  pedidoItems PedidoItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([grupoId])
+  @@index([activo])
+  @@map("productos")
+}
+
+/// NUEVO — reemplaza TODO esto de un solo golpe:
+///   components_productos_items (+ 3 tablas _links)
+///   components_productos_item_simples (+ tabla _links)   [confirmar si estaba en uso, ver nota abajo]
+///   components_productos_stock_colores (+ links + junction)
+///   components_productos_stock_por_tallas (+ links)
+///   inventario_colores (+ 3 tablas _links)
+///   inventarios (+ tabla _links)
+///
+/// Una fila = una combinación vendible real: producto + color + talla.
+/// El @@unique de abajo es la pieza que faltaba en el schema original:
+/// evita crear dos veces la misma variante por error.
+model ProductoVariante {
+  id     Int    @id @default(autoincrement())
+  sku    String @unique @db.VarChar(255) // antes "codigo", repetido en 2 tablas distintas
+
+  productoId Int      @map("producto_id")
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  colorId    Int?     @map("color_id")
+  color      Color?   @relation(fields: [colorId], references: [id], onDelete: Restrict)
+  tallaId    Int?     @map("talla_id")
+  talla      Talla?   @relation(fields: [tallaId], references: [id], onDelete: Restrict)
+
+  precioCosto        Decimal  @default(0) @map("precio_costo") @db.Decimal(10, 2) // antes "precio_unitario"
+  precioVenta        Decimal  @default(0) @map("precio_venta") @db.Decimal(10, 2) // antes "precio_venta_sugerido"
+  enOferta           Boolean  @default(false) @map("en_oferta")
+  precioOferta       Decimal? @map("precio_oferta") @db.Decimal(10, 2)
+  fechaInicioOferta  DateTime? @map("fecha_inicio_oferta") @db.Date
+  fechaFinOferta     DateTime? @map("fecha_fin_oferta") @db.Date
+  // margen_ganancia se eliminó: se calcula (precioVenta - precioCosto) al vuelo
+  // en vez de guardarlo, para que nunca quede desactualizado.
+
+  stockActual  Int    @default(0) @map("stock_actual")
+  stockMinimo  Int    @default(0) @map("stock_minimo")
+  unidadMedida String? @map("unidad_de_medida") @db.VarChar(50)
+  estado       String  @default("activo") @db.VarChar(50) // antes "estado_producto"
+  observaciones String?
+
+  movimientos MovimientoInventarioItem[]
+  pedidoItems PedidoItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([productoId, colorId, tallaId]) // <- la restricción que faltaba en Strapi
+  @@index([stockActual])
+  @@map("producto_variantes")
+}
+
+/// NUEVO — reemplaza el sistema polimórfico files_related_morphs para productos.
+/// Explícito y simple: una fila por imagen de producto, en vez de una tabla
+/// genérica "related_type/related_id" que sirve para todo pero no se puede
+/// consultar ni indexar bien.
+model ProductoImagen {
+  id         Int      @id @default(autoincrement())
+  productoId Int      @map("producto_id")
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  colorId    Int?     @map("color_id") // null = foto general, no ligada a un color específico
+  color      Color?   @relation(fields: [colorId], references: [id])
+  url        String   // URL en Vercel Blob / Cloudflare R2, no un archivo en Postgres
+  altText    String?  @map("alt_text")
+  principal  Boolean  @default(false) // nuevo: marca la foto de portada para tarjetas/listados
+  orden      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([productoId])
+  @@index([colorId])
+  @@map("producto_imagenes")
+}
+
+// ----------------------------------------------------------------------------
+// INVENTARIO (kardex)
+// ----------------------------------------------------------------------------
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+}
+
+/// Reemplaza (cabecera): ingresos, ingresos_aprobado_por_links, ingresos_ingresado_por_links,
+///                       salidas, salidas_aprobado_por_links, salidas_solicitado_por_links
+/// Un solo "kardex" para entradas y salidas en vez de dos tablas paralelas casi idénticas.
+model MovimientoInventario {
+  id               Int            @id @default(autoincrement())
+  tipo             TipoMovimiento
+  numeroDocumento  String?        @map("numero_documento") @db.VarChar(255)
+  fecha            DateTime       @default(now())
+  motivo           String?        @db.VarChar(255) // "motivo_ingreso" o "tipo_solicitud"/"aclaracion"
+  estado           String         @default("pendiente") @db.VarChar(50)
+  aprobado         Boolean        @default(false)
+
+  registradoPorId  Int?     @map("registrado_por_id") // antes ingresado_por / solicitado_por
+  registradoPor    Usuario? @relation("MovRegistradoPor", fields: [registradoPorId], references: [id], onDelete: Restrict)
+  aprobadoPorId    Int?     @map("aprobado_por_id")
+  aprobadoPor      Usuario? @relation("MovAprobadoPor", fields: [aprobadoPorId], references: [id], onDelete: Restrict)
+
+  totalItems  Int      @default(0) @map("total_items")
+  totalCosto  Decimal? @map("total_costo") @db.Decimal(10, 2)
+  observaciones String?
+
+  items MovimientoInventarioItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([tipo, fecha])
+  @@map("movimientos_inventario")
+}
+
+/// Reemplaza (líneas): components_productos_items_salidas (+3 links),
+///                     ingresos_components, salidas_components (junctions polimórficos)
+model MovimientoInventarioItem {
+  id            Int    @id @default(autoincrement())
+  movimientoId  Int    @map("movimiento_id")
+  movimiento    MovimientoInventario @relation(fields: [movimientoId], references: [id], onDelete: Cascade)
+  varianteId    Int    @map("variante_id")
+  variante      ProductoVariante @relation(fields: [varianteId], references: [id])
+  cantidad      Int
+  costoUnitario Decimal? @map("costo_unitario") @db.Decimal(10, 2)
+  observaciones String?
+
+  @@index([movimientoId])
+  @@index([varianteId])
+  @@map("movimiento_inventario_items")
+}
+
+// ----------------------------------------------------------------------------
+// CLIENTES Y PEDIDOS
+// ----------------------------------------------------------------------------
+
+/// Reemplaza: up_users, PERO SOLO para compradores de la tienda.
+/// El personal interno (admins, vendedores, distribuidores) vive en el
+/// modelo Usuario de abajo — son conceptos distintos con permisos distintos,
+/// no tiene sentido que compartan la misma tabla.
+model Cliente {
+  id           Int      @id @default(autoincrement())
+  nombre       String?  @map("username") @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String?  @map("password_hash") @db.VarChar(255)
+  confirmado   Boolean  @default(false)
+  bloqueado    Boolean  @default(false)
+
+  pedidos      Pedido[]
+  resetTokens  PasswordResetToken[]
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("clientes")
+}
+
+enum RolUsuario {
+  ADMIN_PRINCIPAL     // acceso total: gestiona todo, incluyendo usuarios y reportes
+  ADMIN_INVENTARIO    // gestiona catálogo, productos e inventario (almacén)
+  VENDEDOR_PREVENTA   // crea y gestiona pedidos (toma la venta)
+  VENDEDOR_DESPACHO   // avanza el estado de pedidos y registra entradas/salidas (despacho)
+}
+
+/// NUEVO — tu equipo interno. Separado de Cliente a propósito: un comprador
+/// nunca debería poder autenticarse como si fuera un vendedor solo porque
+/// comparten tabla. Aquí sí vive el rol.
+model Usuario {
+  id           Int        @id @default(autoincrement())
+  nombre       String     @db.VarChar(255)
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  rol          RolUsuario
+  activo       Boolean    @default(true) // para desactivar sin borrar el historial de quién hizo qué
+
+  movimientosRegistrados MovimientoInventario[] @relation("MovRegistradoPor")
+  movimientosAprobados   MovimientoInventario[] @relation("MovAprobadoPor")
+  pedidosRegistrados     Pedido[]
+  resetTokens  PasswordResetToken[]
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("usuarios")
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  CONFIRMADO
+  ENVIADO
+  ENTREGADO
+  CANCELADO
+}
+
+/// Reemplaza: pedidos, pedidos_user_links
+model Pedido {
+  id           Int      @id @default(autoincrement())
+  referencia   String   @unique @db.VarChar(255)
+  clienteId    Int?     @map("cliente_id")
+  cliente      Cliente? @relation(fields: [clienteId], references: [id])
+  registradoPorId Int?  @map("registrado_por_id") // qué vendedor/admin registró la venta manual (null si fue el cliente desde la tienda)
+  registradoPor   Usuario? @relation(fields: [registradoPorId], references: [id], onDelete: Restrict)
+  emailInvitado String? @map("email_invitado") @db.VarChar(255) // para compras sin cuenta
+  nombreInvitado String? @map("nombre_invitado") @db.VarChar(255) // pedidos tomados por teléfono/en tienda
+  telefonoInvitado String? @map("telefono_invitado") @db.VarChar(50)
+
+  estado       EstadoPedido @default(PENDIENTE)
+  metodoPago   String?  @map("metodo_pago") @db.VarChar(100)
+  costoEnvio   Decimal  @default(0) @map("costo_envio") @db.Decimal(10, 2)
+  direccionEnvio String? @map("direccion_envio")
+  subtotal     Decimal  @db.Decimal(10, 2)
+  total        Decimal  @db.Decimal(10, 2)
+
+  fechaPedido            DateTime  @default(now()) @map("fecha_pedido")
+  fechaEntregaSolicitada DateTime? @map("fecha_entrega_solicitada")
+
+  items PedidoItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([clienteId])
+  @@index([estado])
+  @@map("pedidos")
+}
+
+/// NUEVO — reemplaza el campo pedidos.productos (jsonb) por filas reales.
+/// Se guardan "snapshots" (nombreProducto, precioUnitario) para que si el
+/// producto cambia de precio o se elimina después, el pedido histórico
+/// siga mostrando los datos correctos de cuando se compró.
+model PedidoItem {
+  id         Int      @id @default(autoincrement())
+  pedidoId   Int      @map("pedido_id")
+  pedido     Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  varianteId Int?     @map("variante_id") // nullable: sobrevive aunque se borre la variante
+  variante   ProductoVariante? @relation(fields: [varianteId], references: [id])
+  productoId Int?     @map("producto_id")
+  producto   Producto? @relation(fields: [productoId], references: [id])
+
+  nombreSnapshot  String  @map("nombre_snapshot") @db.VarChar(255)
+  tallaSnapshot   String? @map("talla_snapshot") @db.VarChar(50)
+  colorSnapshot   String? @map("color_snapshot") @db.VarChar(100)
+  precioUnitario  Decimal @map("precio_unitario") @db.Decimal(10, 2)
+  cantidad        Int
+  subtotal        Decimal @db.Decimal(10, 2)
+
+  @@index([pedidoId])
+  @@map("pedido_items")
+}
+
+// ----------------------------------------------------------------------------
+// CONTENIDO INSTITUCIONAL (baja prioridad de optimización, se mantiene similar)
+// ----------------------------------------------------------------------------
+
+/// Reemplaza: empresas
+model Empresa {
+  id                  Int      @id @default(autoincrement())
+  tituloHistoria      String?  @map("titulo_historia") @db.VarChar(255)
+  descripcionHistoria String?  @map("descripcion_historia")
+  filosofia           String?
+  media               EmpresaMedia[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("empresa")
+}
+
+enum TipoEmpresaMedia {
+  CARRUSEL
+  GALERIA
+}
+
+/// Reemplaza: carrusel_empresas (+links), galeria_empresas
+/// Se fusionaron porque eran la misma idea (imagen + título + orden)
+/// distinguida solo por el "tipo".
+model EmpresaMedia {
+  id          Int      @id @default(autoincrement())
+  empresaId   Int      @map("empresa_id")
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo        TipoEmpresaMedia
+  titulo      String?  @db.VarChar(255)
+  descripcion String?
+  enlace      String?
+  orden       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([empresaId, tipo])
+  @@map("empresa_media")
+}
+
+enum TipoPublicacion {
+  NOVEDAD
+  PUBLICACION
+}
+
+/// Reemplaza: novedades, publicaciones_recientes
+/// Eran prácticamente el mismo modelo (título, fecha, resumen, enlace).
+model Publicacion {
+  id          Int      @id @default(autoincrement())
+  tipo        TipoPublicacion
+  titulo      String   @db.VarChar(255)
+  fecha       DateTime @db.Date
+  resumen     String?  @db.VarChar(255)
+  enlace      String?
+  publicadoEn DateTime? @map("publicado_en")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([tipo, fecha])
+  @@map("publicaciones")
+}
+
+/// Reemplaza: mensajes (formulario de contacto)
+model Mensaje {
+  id          Int      @id @default(autoincrement())
+  nombreCompleto String @map("nombre_completo") @db.VarChar(255)
+  tipoMensaje String?  @map("tipo_mensaje") @db.VarChar(100)
+  descripcion String?
+  leido       Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("mensajes")
+}
+
+// ----------------------------------------------------------------------------
+// AUTENTICACIÓN (login + recuperación de contraseña)
+// ----------------------------------------------------------------------------
+
+/// NUEVO — soporta "olvidé mi contraseña" tanto para Cliente como para Usuario.
+/// Se usa UNA sola de las dos FK por fila (clienteId o usuarioId), nunca ambas.
+/// El flujo: se genera un token random, se manda por correo un link con ese
+/// token, y al hacer clic se valida contra esta tabla antes de dejar cambiar
+/// la contraseña. `usado` evita que el mismo link sirva dos veces.
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique @db.VarChar(255)
+  clienteId Int?     @map("cliente_id")
+  cliente   Cliente? @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioId Int?     @map("usuario_id")
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usado     Boolean  @default(false)
+  expiraEn  DateTime @map("expira_en")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@map("password_reset_tokens")
+}

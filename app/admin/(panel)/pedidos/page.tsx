@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Plus, ClipboardList, Check, X, Truck, PackageCheck } from "lucide-react";
+import { Plus, ClipboardList, Check, X, Truck, PackageCheck, Receipt } from "lucide-react";
 import { tienePermiso } from "@/lib/permisos";
 
 type Pedido = {
@@ -11,6 +11,8 @@ type Pedido = {
   nombreInvitado: string | null;
   estado: string;
   total: string;
+  metodoPago: string | null;
+  comprobanteUrl: string | null;
   items: { nombreSnapshot: string; colorSnapshot: string | null; tallaSnapshot: string | null; cantidad: number }[];
 };
 
@@ -123,7 +125,22 @@ export default function PedidosPage() {
                     ))}
                   </td>
                   <td className="p-4 font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</td>
-                  <td className="p-4"><EstadoBadge estado={p.estado} /></td>
+                  <td className="p-4">
+                    <EstadoBadge estado={p.estado} />
+                    {p.comprobanteUrl && (
+                      <a
+                        href={p.comprobanteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
+                      >
+                        <Receipt size={12} /> Ver comprobante
+                      </a>
+                    )}
+                    {p.metodoPago === "qr" && !p.comprobanteUrl && (
+                      <p className="mt-2 text-xs text-[var(--color-warning)]">Sin comprobante adjunto</p>
+                    )}
+                  </td>
                   <td className="p-4">
                     <div className="flex flex-col gap-1.5 items-end">
                       {SIGUIENTE_ESTADO[p.estado]?.map((opcion) => {

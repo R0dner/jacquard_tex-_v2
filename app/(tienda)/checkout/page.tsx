@@ -1,12 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCart } from "@/lib/cart-context";
-import { MapPin, CreditCard, CheckCircle2 } from "lucide-react";
+import { MapPin, CreditCard, CheckCircle2, QrCode, UploadCloud, FileCheck2 } from "lucide-react";
 
 const inputClass =
   "border border-[var(--color-line)] rounded-md px-4 py-3 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-shadow";
+
+type ConfiguracionPago = {
+  qrImagenUrl: string | null;
+  banco: string | null;
+  numeroCuenta: string | null;
+  titular: string | null;
+  instrucciones: string | null;
+};
 
 export default function CheckoutPage() {
   const { data: session } = useSession();
@@ -21,14 +29,27 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
+  const [configPago, setConfigPago] = useState<ConfiguracionPago | null>(null);
+  const [comprobante, setComprobante] = useState<File | null>(null);
+  const comprobanteInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/configuracion/pago").then((r) => r.json()).then(setConfigPago);
+  }, []);
+
   const METODOS = [
     { valor: "efectivo", label: "Contra entrega" },
-    { valor: "transferencia", label: "Transferencia" },
+    { valor: "qr", label: "QR / Transferencia" },
     { valor: "tarjeta", label: "Tarjeta" },
   ];
 
   async function confirmarPedido() {
     setError("");
+    if (metodoPago === "qr" && !comprobante) {
+      setError("Adjunta la captura de tu comprobante de pago para continuar.");
+      return;
+    }
+
     setCargando(true);
     const res = await fetch("/api/tienda/pedidos", {
       method: "POST",
@@ -44,6 +65,20 @@ export default function CheckoutPage() {
       setCargando(false);
       return;
     }
+
+    if (metodoPago === "qr" && comprobante) {
+      try {
+        const form = new FormData();
+        form.append("file", comprobante);
+        form.append("referencia", data.referencia);
+        await fetch("/api/tienda/pedidos/comprobante", { method: "POST", body: form });
+      } catch {
+        // El pedido ya se creó correctamente; si falla solo la subida del
+        // comprobante, no bloqueamos la compra — el administrador puede
+        // pedirlo de vuelta por otro medio si hace falta.
+      }
+    }
+
     vaciar();
     router.push(`/pedido-confirmado?ref=${data.referencia}`);
   }
@@ -106,6 +141,52 @@ export default function CheckoutPage() {
                 </button>
               ))}
             </div>
+
+            {metodoPago === "qr" && (
+              <div className="mt-5 bg-[var(--color-bg)] rounded-xl p-5 flex flex-col sm:flex-row gap-5">
+                <div className="w-40 h-40 rounded-lg border border-[var(--color-line)] bg-white flex items-center justify-center overflow-hidden shrink-0 mx-auto sm:mx-0">
+                  {configPago?.qrImagenUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={configPago.qrImagenUrl} alt="QR de pago" className="w-full h-full object-contain" />
+                  ) : (
+                    <QrCode size={36} className="text-gray-300" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-2 text-sm">
+                  <p className="font-semibold">
+                    Escanea el QR o transfiere <span className="font-mono-data">Bs {total.toFixed(2)}</span>
+                  </p>
+                  {(configPago?.banco || configPago?.numeroCuenta || configPago?.titular) && (
+                    <div className="text-gray-600 space-y-0.5">
+                      {configPago?.banco && <p>Banco: {configPago.banco}</p>}
+                      {configPago?.numeroCuenta && <p>Cuenta: {configPago.numeroCuenta}</p>}
+                      {configPago?.titular && <p>Titular: {configPago.titular}</p>}
+                    </div>
+                  )}
+                  {configPago?.instrucciones && <p className="text-gray-500 text-xs">{configPago.instrucciones}</p>}
+
+                  <input
+                    ref={comprobanteInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => comprobanteInputRef.current?.click()}
+                    className={`mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium border-2 transition-colors ${
+                      comprobante
+                        ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent-light)]"
+                        : "border-dashed border-[var(--color-line)] text-gray-500 hover:border-[var(--color-accent)]/40"
+                    }`}
+                  >
+                    {comprobante ? <FileCheck2 size={16} /> : <UploadCloud size={16} />}
+                    {comprobante ? comprobante.name : "Adjuntar comprobante de pago"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -126,7 +207,7 @@ export default function CheckoutPage() {
             </div>
             <button
               onClick={confirmarPedido}
-              disabled={cargando || !direccionEnvio}
+              disabled={cargando || !direccionEnvio || (metodoPago === "qr" && !comprobante)}
               className="w-full flex items-center justify-center gap-2 bg-[var(--color-gold)] text-[var(--color-ink)] py-3.5 rounded-full text-sm font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:translate-y-0"
             >
               <CheckCircle2 size={16} /> {cargando ? "Procesando..." : "Confirmar pedido"}

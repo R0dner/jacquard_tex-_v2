@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  LayoutGrid, Shirt, ClipboardList, Boxes, Tags, Palette, Ruler, Users, LogOut, BarChart3,
+  LayoutGrid, Shirt, ClipboardList, Boxes, Tags, Palette, Ruler, Users, LogOut, BarChart3, QrCode,
 } from "lucide-react";
 import { adminAuth, adminSignOut } from "@/auth-admin";
 import { puedeVerSeccion } from "@/lib/permisos";
@@ -52,12 +52,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               );
             })}
             {rol === "ADMIN_PRINCIPAL" && (
-              <Link
-                href="/admin/reportes"
-                className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
-              >
-                <BarChart3 size={17} strokeWidth={1.75} className="opacity-80" /> Reportes
-              </Link>
+              <>
+                <Link
+                  href="/admin/reportes"
+                  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
+                >
+                  <BarChart3 size={17} strokeWidth={1.75} className="opacity-80" /> Reportes
+                </Link>
+                <Link
+                  href="/admin/configuracion/pago"
+                  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
+                >
+                  <QrCode size={17} strokeWidth={1.75} className="opacity-80" /> Pago QR
+                </Link>
+              </>
             )}
           </nav>
           <div className="px-5 py-4 border-t border-white/10 text-xs text-white/40">

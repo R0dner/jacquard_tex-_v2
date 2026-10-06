@@ -316,6 +316,7 @@ model Pedido {
 
   estado       EstadoPedido @default(PENDIENTE)
   metodoPago   String?  @map("metodo_pago") @db.VarChar(100)
+  comprobanteUrl String? @map("comprobante_url") // captura/foto del comprobante de pago QR subida por el cliente en checkout
   costoEnvio   Decimal  @default(0) @map("costo_envio") @db.Decimal(10, 2)
   direccionEnvio String? @map("direccion_envio")
   subtotal     Decimal  @db.Decimal(10, 2)
@@ -332,6 +333,23 @@ model Pedido {
   @@index([clienteId])
   @@index([estado])
   @@map("pedidos")
+}
+
+/// NUEVO — configuración del pago por QR (transferencia bancaria).
+/// Tabla "singleton": siempre una sola fila (id=1), editable solo por el
+/// Administrador Principal desde /admin/configuracion/pago. El checkout
+/// la lee de forma pública para mostrar la imagen del QR y los datos de la
+/// cuenta cuando el cliente elige pagar por QR/transferencia.
+model ConfiguracionPago {
+  id            Int      @id @default(1)
+  qrImagenUrl   String?  @map("qr_imagen_url") // imagen del QR, subida a Vercel Blob
+  banco         String?  @db.VarChar(255)
+  numeroCuenta  String?  @map("numero_cuenta") @db.VarChar(100)
+  titular       String?  @db.VarChar(255)
+  instrucciones String? // texto libre adicional para el cliente (ej. "enviar comprobante por WhatsApp también")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracion_pago")
 }
 
 /// NUEVO — reemplaza el campo pedidos.productos (jsonb) por filas reales.

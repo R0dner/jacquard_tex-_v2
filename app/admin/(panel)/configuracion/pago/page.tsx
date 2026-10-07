@@ -47,7 +47,10 @@ export default function ConfiguracionPagoPage() {
   }
   useEffect(cargar, []);
   useEffect(() => {
-    fetch("/api/configuracion/envios").then((r) => r.json()).then(setTarifas);
+    fetch("/api/configuracion/envios")
+      .then((r) => r.json())
+      .then((data) => setTarifas(Array.isArray(data) ? data : []))
+      .catch(() => setTarifas([]));
   }, []);
 
   function cambiarTarifa(id: number, cambios: Partial<TarifaEnvio>) {

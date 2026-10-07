@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { QrCode, UploadCloud, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { QrCode, UploadCloud, ShieldAlert, CheckCircle2, Truck } from "lucide-react";
 
 type ConfiguracionPago = {
   qrImagenUrl: string | null;
@@ -10,6 +10,8 @@ type ConfiguracionPago = {
   titular: string | null;
   instrucciones: string | null;
 };
+
+type TarifaEnvio = { id: number; departamento: string; costo: number; activo: boolean };
 
 const inputClass =
   "border border-[var(--color-line)] rounded-md px-3 py-2.5 w-full text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]";
@@ -29,6 +31,9 @@ export default function ConfiguracionPagoPage() {
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [tarifas, setTarifas] = useState<TarifaEnvio[]>([]);
+  const [guardandoEnvios, setGuardandoEnvios] = useState(false);
+
   function cargar() {
     fetch("/api/configuracion/pago")
       .then((r) => r.json())
@@ -41,6 +46,27 @@ export default function ConfiguracionPagoPage() {
       });
   }
   useEffect(cargar, []);
+  useEffect(() => {
+    fetch("/api/configuracion/envios").then((r) => r.json()).then(setTarifas);
+  }, []);
+
+  function cambiarTarifa(id: number, cambios: Partial<TarifaEnvio>) {
+    setTarifas((prev) => prev.map((t) => (t.id === id ? { ...t, ...cambios } : t)));
+  }
+
+  async function guardarEnvios() {
+    setError("");
+    setMensaje("");
+    setGuardandoEnvios(true);
+    const res = await fetch("/api/configuracion/envios", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tarifas }),
+    });
+    setGuardandoEnvios(false);
+    if (!res.ok) return setError((await res.json()).error);
+    setMensaje("Costos de envío guardados.");
+  }
 
   async function subirQr(file: File) {
     setError("");
@@ -153,6 +179,47 @@ export default function ConfiguracionPagoPage() {
           className="bg-[var(--color-gold)] text-[var(--color-ink)] px-5 py-2.5 rounded-full text-sm font-bold hover:shadow-md transition-all disabled:opacity-50"
         >
           {guardando ? "Guardando..." : "Guardar datos"}
+        </button>
+      </div>
+
+      <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-6 space-y-3">
+        <h2 className="font-medium text-sm text-gray-700 flex items-center gap-2">
+          <Truck size={16} className="text-[var(--color-accent)]" /> Costo de envío por departamento
+        </h2>
+        <p className="text-xs text-gray-400">
+          El cliente elige el departamento en el checkout y este costo se suma automáticamente al total a pagar.
+        </p>
+        {tarifas.map((t) => (
+          <div key={t.id} className="flex items-center gap-3">
+            <span className="w-32 text-sm font-medium">{t.departamento}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-gray-500">Bs</span>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                className={`${inputClass} w-28`}
+                value={t.costo}
+                onChange={(e) => cambiarTarifa(t.id, { costo: Number(e.target.value) })}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer ml-auto">
+              <input
+                type="checkbox"
+                checked={t.activo}
+                onChange={(e) => cambiarTarifa(t.id, { activo: e.target.checked })}
+                className="w-4 h-4 accent-[var(--color-accent)]"
+              />
+              Disponible
+            </label>
+          </div>
+        ))}
+        <button
+          onClick={guardarEnvios}
+          disabled={guardandoEnvios}
+          className="bg-[var(--color-gold)] text-[var(--color-ink)] px-5 py-2.5 rounded-full text-sm font-bold hover:shadow-md transition-all disabled:opacity-50"
+        >
+          {guardandoEnvios ? "Guardando..." : "Guardar costos de envío"}
         </button>
       </div>
     </div>

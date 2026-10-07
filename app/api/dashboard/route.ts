@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { expirarReservasVencidas } from "@/lib/reservas";
 
 export async function GET() {
+  await expirarReservasVencidas();
   const hace30Dias = new Date();
   hace30Dias.setDate(hace30Dias.getDate() - 30);
 
@@ -16,7 +18,7 @@ export async function GET() {
         talla: { select: { sigla: true } },
       },
     }),
-    prisma.pedido.count({ where: { estado: "PENDIENTE" } }),
+    prisma.pedido.count({ where: { estado: { in: ["PENDIENTE", "RESERVADO"] } } }),
     prisma.pedido.findMany({
       where: { estado: { in: ["ENVIADO", "ENTREGADO"] }, fechaPedido: { gte: hace30Dias } },
       select: { total: true, fechaPedido: true, items: { select: { nombreSnapshot: true, cantidad: true } } },

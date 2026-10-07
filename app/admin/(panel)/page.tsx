@@ -18,6 +18,7 @@ type Dashboard = {
 
 const COLOR_ESTADO: Record<string, string> = {
   PENDIENTE: "#C97C2C",
+  RESERVADO: "#C9A961",
   CONFIRMADO: "#3B6EA5",
   ENVIADO: "#2F6E5B",
   ENTREGADO: "#1C2333",

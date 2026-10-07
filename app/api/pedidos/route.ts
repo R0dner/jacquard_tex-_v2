@@ -1,8 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { adminAuth } from "@/auth-admin";
 import { NextResponse } from "next/server";
+import { descontarStock, expirarReservasVencidas, fechaExpiracionReserva } from "@/lib/reservas";
 
 export async function GET() {
+  // Antes esta lista era pública: incluye nombres, teléfonos y direcciones de clientes.
+  const session = await adminAuth();
+  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  await expirarReservasVencidas();
   const pedidos = await prisma.pedido.findMany({
     include: { cliente: true, registradoPor: true, items: true },
     orderBy: { fechaPedido: "desc" },
@@ -20,6 +26,8 @@ export async function POST(req: Request) {
   if (!nombreInvitado) {
     return NextResponse.json({ error: "El nombre del cliente es obligatorio" }, { status: 400 });
   }
+
+  await expirarReservasVencidas();
 
   try {
     const pedido = await prisma.$transaction(async (tx) => {
@@ -52,7 +60,8 @@ export async function POST(req: Request) {
       const count = await tx.pedido.count();
       const referencia = `PED-${String(count + 1).padStart(5, "0")}`;
 
-      return tx.pedido.create({
+      const registradoPorId = session?.user ? Number((session.user as any).id) : null;
+      const creado = await tx.pedido.create({
         data: {
           referencia,
           nombreInvitado,
@@ -61,13 +70,18 @@ export async function POST(req: Request) {
           metodoPago,
           subtotal,
           total: subtotal,
-          estado: "PENDIENTE",
-          registradoPorId: session?.user ? Number((session.user as any).id) : null,
+          estado: "RESERVADO",
+          reservaExpiraEn: fechaExpiracionReserva(),
+          registradoPorId,
           items: { create: itemsData },
         },
         include: { items: true },
       });
-    });
+
+      // Aparta el stock por 24 h, igual que los pedidos de la tienda: así vendedor y cliente no chocan.
+      await descontarStock(tx, creado.id, `Reserva - Pedido ${referencia}`, registradoPorId);
+      return creado;
+    }, { timeout: 20000, maxWait: 10000 });
 
     return NextResponse.json(pedido, { status: 201 });
   } catch (e: any) {

@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { expirarReservasVencidas } from "@/lib/reservas";
 
 export async function GET(req: Request) {
+  await expirarReservasVencidas();
   const { searchParams } = new URL(req.url);
   const colorId = searchParams.get("color");
   const tallaId = searchParams.get("talla");

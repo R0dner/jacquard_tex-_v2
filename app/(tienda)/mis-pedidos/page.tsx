@@ -6,6 +6,7 @@ import Link from "next/link";
 
 const ESTADO_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
   PENDIENTE: { bg: "var(--color-warning-light)", text: "var(--color-warning)", dot: "var(--color-warning)" },
+  RESERVADO: { bg: "#F3EAD6", text: "#8A6A1F", dot: "#C9A961" },
   CONFIRMADO: { bg: "#E8F0F8", text: "#3B6EA5", dot: "#3B6EA5" },
   ENVIADO: { bg: "var(--color-accent-light)", text: "var(--color-accent)", dot: "var(--color-accent)" },
   ENTREGADO: { bg: "var(--color-ink)", text: "#ffffff", dot: "#ffffff" },
@@ -74,6 +75,13 @@ export default async function MisPedidosPage() {
                       </div>
                     ))}
                   </div>
+
+                  {Number(p.costoEnvio) > 0 && (
+                    <div className="flex justify-between py-2 text-sm text-gray-600 border-t border-[var(--color-line)]">
+                      <span>Envío{p.departamentoEnvio ? ` (${p.departamentoEnvio})` : ""}</span>
+                      <span className="font-mono-data font-medium">Bs {Number(p.costoEnvio).toFixed(2)}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between pt-4 mt-3 border-t border-[var(--color-line)] font-bold">
                     <span>Total</span>

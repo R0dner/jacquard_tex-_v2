@@ -257,6 +257,7 @@ model Cliente {
   bloqueado    Boolean  @default(false)
 
   pedidos      Pedido[]
+  direcciones  DireccionCliente[]
   resetTokens  PasswordResetToken[]
 
   createdAt    DateTime @default(now()) @map("created_at")
@@ -295,7 +296,8 @@ model Usuario {
 }
 
 enum EstadoPedido {
-  PENDIENTE
+  PENDIENTE   // heredado: pedidos anteriores a las reservas, sin stock apartado
+  RESERVADO   // stock apartado por 24 h; si nadie lo confirma, se libera solo
   CONFIRMADO
   ENVIADO
   ENTREGADO
@@ -318,7 +320,10 @@ model Pedido {
   metodoPago   String?  @map("metodo_pago") @db.VarChar(100)
   comprobanteUrl String? @map("comprobante_url") // captura/foto del comprobante de pago QR subida por el cliente en checkout
   costoEnvio   Decimal  @default(0) @map("costo_envio") @db.Decimal(10, 2)
+  departamentoEnvio String? @map("departamento_envio") @db.VarChar(100) // null = sin envío (recoge en tienda)
   direccionEnvio String? @map("direccion_envio")
+  reservaExpiraEn DateTime? @map("reserva_expira_en") // límite de 24 h mientras está RESERVADO
+  stockDescontado Boolean @default(false) @map("stock_descontado") // true = las unidades ya salieron del inventario por este pedido
   subtotal     Decimal  @db.Decimal(10, 2)
   total        Decimal  @db.Decimal(10, 2)
 
@@ -333,6 +338,34 @@ model Pedido {
   @@index([clienteId])
   @@index([estado])
   @@map("pedidos")
+}
+
+/// NUEVO — costo de envío por departamento. Solo Cochabamba y Santa Cruz por
+/// ahora; el Administrador Principal edita el costo desde el panel.
+model TarifaEnvio {
+  id           Int      @id @default(autoincrement())
+  departamento String   @unique @db.VarChar(100)
+  costo        Decimal  @default(0) @db.Decimal(10, 2)
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("tarifas_envio")
+}
+
+/// NUEVO — direcciones guardadas de un cliente registrado, para elegirlas
+/// en futuros pedidos en vez de escribirlas de nuevo.
+model DireccionCliente {
+  id             Int      @id @default(autoincrement())
+  clienteId      Int      @map("cliente_id")
+  cliente        Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  direccion      String
+  departamento   String?  @db.VarChar(100)
+  predeterminada Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([clienteId])
+  @@map("direcciones_cliente")
 }
 
 /// NUEVO — configuración del pago por QR (transferencia bancaria).

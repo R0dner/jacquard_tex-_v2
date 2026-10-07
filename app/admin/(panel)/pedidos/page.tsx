@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Plus, ClipboardList, Check, X, Truck, PackageCheck, Receipt } from "lucide-react";
+import { Plus, ClipboardList, Check, X, Truck, PackageCheck, Receipt, FileText, Clock } from "lucide-react";
 import { tienePermiso } from "@/lib/permisos";
+import { descargarRecibo } from "@/lib/recibo-pdf";
 
 type Pedido = {
   id: number;
@@ -13,11 +14,20 @@ type Pedido = {
   total: string;
   metodoPago: string | null;
   comprobanteUrl: string | null;
-  items: { nombreSnapshot: string; colorSnapshot: string | null; tallaSnapshot: string | null; cantidad: number }[];
+  fechaPedido: string;
+  telefonoInvitado: string | null;
+  cliente: { nombre: string | null; email: string } | null;
+  direccionEnvio: string | null;
+  departamentoEnvio: string | null;
+  subtotal: string;
+  costoEnvio: string;
+  reservaExpiraEn: string | null;
+  items: { nombreSnapshot: string; colorSnapshot: string | null; tallaSnapshot: string | null; cantidad: number; precioUnitario: string; subtotal: string }[];
 };
 
 const ESTADO_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
   PENDIENTE: { bg: "var(--color-warning-light)", text: "var(--color-warning)", dot: "var(--color-warning)" },
+  RESERVADO: { bg: "#F3EAD6", text: "#8A6A1F", dot: "#C9A961" },
   CONFIRMADO: { bg: "#E8F0F8", text: "#3B6EA5", dot: "#3B6EA5" },
   ENVIADO: { bg: "var(--color-accent-light)", text: "var(--color-accent)", dot: "var(--color-accent)" },
   ENTREGADO: { bg: "var(--color-ink)", text: "#ffffff", dot: "#ffffff" },
@@ -25,6 +35,10 @@ const ESTADO_STYLE: Record<string, { bg: string; text: string; dot: string }> = 
 };
 
 const SIGUIENTE_ESTADO: Record<string, { label: string; valor: string; icon: any }[]> = {
+  RESERVADO: [
+    { label: "Confirmar", valor: "CONFIRMADO", icon: Check },
+    { label: "Cancelar", valor: "CANCELADO", icon: X },
+  ],
   PENDIENTE: [
     { label: "Confirmar", valor: "CONFIRMADO", icon: Check },
     { label: "Cancelar", valor: "CANCELADO", icon: X },
@@ -37,6 +51,15 @@ const SIGUIENTE_ESTADO: Record<string, { label: string; valor: string; icon: any
   ENTREGADO: [],
   CANCELADO: [],
 };
+
+function tiempoRestante(expira: string | null) {
+  if (!expira) return null;
+  const ms = new Date(expira).getTime() - Date.now();
+  if (ms <= 0) return "Vencida";
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `Vence en ${h} h ${m} min` : `Vence en ${m} min`;
+}
 
 function EstadoBadge({ estado }: { estado: string }) {
   const s = ESTADO_STYLE[estado] ?? { bg: "#eee", text: "#666", dot: "#999" };
@@ -124,7 +147,12 @@ export default function PedidosPage() {
                       <div key={idx}>{it.nombreSnapshot} {it.colorSnapshot} {it.tallaSnapshot} ×{it.cantidad}</div>
                     ))}
                   </td>
-                  <td className="p-4 font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</td>
+                  <td className="p-4">
+                    <span className="font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</span>
+                    {Number(p.costoEnvio) > 0 && (
+                      <p className="text-xs text-gray-500 mt-0.5">incl. envío {p.departamentoEnvio} Bs {Number(p.costoEnvio).toFixed(2)}</p>
+                    )}
+                  </td>
                   <td className="p-4">
                     <EstadoBadge estado={p.estado} />
                     {p.comprobanteUrl && (
@@ -140,9 +168,20 @@ export default function PedidosPage() {
                     {p.metodoPago === "qr" && !p.comprobanteUrl && (
                       <p className="mt-2 text-xs text-[var(--color-warning)]">Sin comprobante adjunto</p>
                     )}
+                    {p.estado === "RESERVADO" && (
+                      <p className="mt-2 flex items-center gap-1 text-xs text-[#8A6A1F]">
+                        <Clock size={12} /> {tiempoRestante(p.reservaExpiraEn)}
+                      </p>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col gap-1.5 items-end">
+                      <button
+                        onClick={() => descargarRecibo(p)}
+                        className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--color-line)] text-gray-600 hover:bg-[var(--color-bg)] transition-colors whitespace-nowrap"
+                      >
+                        <FileText size={13} /> Recibo PDF
+                      </button>
                       {SIGUIENTE_ESTADO[p.estado]?.map((opcion) => {
                         const s = ESTADO_STYLE[opcion.valor];
                         const Icon = opcion.icon;

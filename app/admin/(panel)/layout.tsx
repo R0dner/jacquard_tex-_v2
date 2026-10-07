@@ -63,7 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   href="/admin/configuracion/pago"
                   className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
                 >
-                  <QrCode size={17} strokeWidth={1.75} className="opacity-80" /> Pago QR
+                  <QrCode size={17} strokeWidth={1.75} className="opacity-80" /> Pago y envíos
                 </Link>
               </>
             )}

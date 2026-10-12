@@ -88,3 +88,14 @@ input[type="color"].color-swatch::-moz-color-swatch {
 .texture-noise {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
+
+/* Responsive: evita que los campos desborden y que iOS haga zoom al enfocar */
+input, select, textarea { min-width: 0; max-width: 100%; }
+img { max-width: 100%; }
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

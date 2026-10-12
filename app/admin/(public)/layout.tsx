@@ -32,7 +32,7 @@ export default function PublicAuthLayout({ children }: { children: React.ReactNo
           </p>
         </div>
       </div>
-        <div className="flex items-center justify-center p-8 bg-[var(--color-bg)] relative overflow-hidden">
+        <div className="flex items-center justify-center p-5 sm:p-8 bg-[var(--color-bg)] relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--color-accent)]/5 blur-3xl" />
           <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
           <div className="relative">{children}</div>

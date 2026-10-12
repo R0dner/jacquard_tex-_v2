@@ -91,10 +91,13 @@ export function QuickViewModal({ slug, onClose }: { slug: string; onClose: () =>
   return (
     <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[88vh] overflow-auto grid md:grid-cols-2 shadow-2xl"
+        className="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto grid md:grid-cols-2 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4">
+          <button onClick={onClose} aria-label="Cerrar" className="md:hidden absolute top-6 right-6 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow text-[var(--color-ink)]">
+            <X size={18} />
+          </button>
           <div className="aspect-square bg-[var(--color-bg)] rounded-xl overflow-hidden">
             {imagenesAMostrar[imagenActiva] ? (
               <img src={imagenesAMostrar[imagenActiva].url} className="w-full h-full object-cover" />
@@ -119,12 +122,12 @@ export function QuickViewModal({ slug, onClose }: { slug: string; onClose: () =>
           )}
         </div>
 
-        <div className="p-6 pt-8 relative">
-          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] transition-colors">
+        <div className="p-5 sm:p-6 sm:pt-8 relative">
+          <button onClick={onClose} className="hidden md:flex absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full text-gray-400 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] transition-colors">
             <X size={18} />
           </button>
 
-          <h2 className="font-display text-3xl font-medium pr-8 leading-tight">{producto.nombre}</h2>
+          <h2 className="font-display text-2xl sm:text-3xl font-medium md:pr-8 leading-tight">{producto.nombre}</h2>
           {producto.descripcion && <p className="text-sm text-gray-500 mt-2 leading-relaxed">{producto.descripcion}</p>}
 
           <div className="flex items-center gap-3 mt-3">
@@ -142,7 +145,7 @@ export function QuickViewModal({ slug, onClose }: { slug: string; onClose: () =>
             <p className="text-sm font-medium mb-3">
               Color {colorId && <span className="text-[var(--color-accent)] font-semibold">— {coloresDisponibles.find((c) => c.id === colorId)?.nombre}</span>}
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {coloresDisponibles.map((c) => (
                 <button
                   key={c.id}

@@ -51,17 +51,17 @@ export default function DashboardPage() {
     fetch("/api/dashboard").then((r) => r.json()).then(setData);
   }, []);
 
-  if (!data) return <p className="p-8 text-gray-400">Cargando...</p>;
+  if (!data) return <p className="p-4 sm:p-8 text-gray-400">Cargando...</p>;
 
   return (
-    <div className="p-8 space-y-8 max-w-6xl">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-6xl">
       {sinPermiso && (
         <p className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-light)] p-3 rounded-md">
           No tienes permiso para acceder a esa sección.
         </p>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-medium">Panel general</h1>
           <p className="text-sm text-gray-500 mt-1">Resumen de la operación</p>
@@ -76,14 +76,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <KpiCard icon={Shirt} label="Productos activos" value={data.totalProductos} accent="#2F6E5B" />
         <KpiCard icon={Boxes} label="Unidades en stock" value={data.stockTotal} accent="#3B6EA5" />
         <KpiCard icon={ClipboardList} label="Pedidos pendientes" value={data.pedidosPendientes} accent="#C97C2C" />
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
           <h2 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-1.5">
             <TrendingUp size={15} className="text-[var(--color-accent)]" /> Ventas — últimos 30 días
           </h2>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Productos más vendidos</h2>
           <ResponsiveContainer width="100%" height={200}>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
 
       <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
         <h2 className="text-sm font-medium text-gray-700 mb-4">Movimientos recientes</h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
           <tbody>
             {data.movimientosRecientes.map((m) => (
               <tr key={m.id} className="border-b border-[var(--color-line)] last:border-0">
@@ -173,7 +173,7 @@ export default function DashboardPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

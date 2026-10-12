@@ -148,7 +148,7 @@ export default function ReportesPage() {
   const sinAcceso = reporteVentas?.error || reporteInventario?.error;
   if (sinAcceso) {
     return (
-      <div className="p-8 max-w-md mx-auto text-center py-24">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-md mx-auto text-center py-24">
         <ShieldAlert size={40} className="mx-auto mb-4 text-[var(--color-danger)]" />
         <h1 className="font-display text-2xl font-medium mb-2">Acceso restringido</h1>
         <p className="text-gray-500 text-sm">Este reporte solo está disponible para el administrador principal.</p>
@@ -157,8 +157,8 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
           <h1 className="font-display text-3xl font-medium">Reportes</h1>
           <p className="text-sm text-gray-500 mt-1">Ventas por vendedor y estado del inventario</p>
@@ -171,7 +171,7 @@ export default function ReportesPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-6 border-b border-[var(--color-line)]">
+      <div className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap border-b border-[var(--color-line)]">
         <button
           onClick={() => setTab("ventas")}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === "ventas" ? "border-[var(--color-accent)] text-[var(--color-accent)]" : "border-transparent text-gray-400"}`}
@@ -251,7 +251,7 @@ export default function ReportesPage() {
 
       {tab === "inventario" && reporteInventario && (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Unidades en stock</p>
               <p className="text-2xl font-bold font-mono-data">{reporteInventario.totales.unidadesTotales}</p>
@@ -266,7 +266,7 @@ export default function ReportesPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5 flex items-center gap-3">
               <ArrowUpCircle size={20} className="text-[var(--color-accent)]" />
               <div>
@@ -291,7 +291,7 @@ export default function ReportesPage() {
           )}
 
           <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
               <thead>
                 <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
                   <th className="p-3 font-semibold">Producto</th>
@@ -315,7 +315,7 @@ export default function ReportesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </>
       )}

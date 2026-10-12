@@ -8,12 +8,12 @@ export default function PedidoConfirmadoPage() {
   const ref = params.get("ref");
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-6">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 sm:px-6">
       <div className="max-w-md w-full text-center">
         <div className="w-20 h-20 rounded-full bg-[var(--color-accent-light)] flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={40} className="text-[var(--color-accent)]" />
         </div>
-        <h1 className="font-display text-4xl font-medium mb-3">¡Pedido recibido!</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-medium mb-3">¡Pedido recibido!</h1>
         <p className="text-gray-500 mb-6">
           Gracias por tu compra. Te contactaremos pronto para confirmar los detalles de entrega.
         </p>

@@ -43,7 +43,7 @@ export default function ColoresPage() {
   }
 
   return (
-    <div className="p-8 max-w-xl space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-xl space-y-6">
       <div>
         <h1 className="font-display text-3xl font-medium flex items-center gap-2"><Palette size={26} className="text-[var(--color-accent)]" /> Colores</h1>
         <p className="text-sm text-gray-500 mt-1">{colores.length} en catálogo</p>

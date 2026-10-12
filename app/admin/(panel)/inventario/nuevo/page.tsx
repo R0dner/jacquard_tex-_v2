@@ -83,7 +83,7 @@ export default function NuevoMovimientoPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto space-y-4">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-display text-3xl font-medium">Nuevo movimiento</h1>
@@ -96,7 +96,7 @@ export default function NuevoMovimientoPage() {
 
       {error && <p className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-light)] p-3 rounded-md">{error}</p>}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
           onClick={() => setTipo("ENTRADA")}
           className={`flex items-center justify-center gap-2 py-3 rounded-lg border-2 font-medium text-sm transition-colors ${
@@ -134,7 +134,7 @@ export default function NuevoMovimientoPage() {
         {productoElegido && (
           <div className="mt-3 border border-[var(--color-line)] rounded-lg p-4 bg-[var(--color-bg)]">
             <p className="text-xs text-gray-500 mb-2">Marca las combinaciones que quieres agregar:</p>
-            <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
               {productoElegido.variantes.map((v) => {
                 const marcada = variantesCheck.includes(v.sku);
                 return (
@@ -166,7 +166,7 @@ export default function NuevoMovimientoPage() {
         {items.length > 0 && (
           <>
             <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mt-6 mb-4">Productos agregados</h2>
-            <table className="w-full text-sm mb-3">
+            <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm mb-3">
               <thead>
                 <tr className="text-left bg-[var(--color-bg)] text-xs text-gray-600 uppercase tracking-wide">
                   <th className="p-3 font-semibold">Producto / color / talla</th>
@@ -211,7 +211,7 @@ export default function NuevoMovimientoPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
 
             <datalist id="lista-variantes">
               {variantesDisponibles.map((v) => (

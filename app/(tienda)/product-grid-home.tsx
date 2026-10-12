@@ -14,7 +14,7 @@ export function ProductGridHome({ productos }: { productos: Producto[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
         {productos.map((p) => {
           const portada = p.imagenes.find((i) => i.principal) ?? p.imagenes[0];
           const enOferta = p.variantes.some((v) => v.enOferta && v.precioOferta);

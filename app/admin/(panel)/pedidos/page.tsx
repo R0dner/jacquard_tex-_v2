@@ -74,6 +74,64 @@ function EstadoBadge({ estado }: { estado: string }) {
   );
 }
 
+function Acciones({ p, onCambiar }: { p: Pedido; onCambiar: (id: number, estado: string) => void }) {
+  return (
+    <div className="flex flex-wrap md:flex-col gap-1.5 md:items-end">
+      <button
+        onClick={() => descargarRecibo(p)}
+        className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 md:py-1.5 rounded-md border border-[var(--color-line)] text-gray-600 hover:bg-[var(--color-bg)] transition-colors whitespace-nowrap"
+      >
+        <FileText size={13} /> Recibo PDF
+      </button>
+      {SIGUIENTE_ESTADO[p.estado]?.map((opcion) => {
+        const s = ESTADO_STYLE[opcion.valor];
+        const Icon = opcion.icon;
+        const esCancelar = opcion.valor === "CANCELADO";
+        return (
+          <button
+            key={opcion.valor}
+            onClick={() => onCambiar(p.id, opcion.valor)}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 md:py-1.5 rounded-md transition-transform hover:scale-105 whitespace-nowrap"
+            style={
+              esCancelar
+                ? { color: "var(--color-danger)", background: "var(--color-danger-light)" }
+                : { color: s?.text ?? "#333", background: s?.bg ?? "#eee" }
+            }
+          >
+            <Icon size={13} /> {opcion.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function InfoEstado({ p }: { p: Pedido }) {
+  return (
+    <>
+      <EstadoBadge estado={p.estado} />
+      {p.comprobanteUrl && (
+        <a
+          href={p.comprobanteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
+        >
+          <Receipt size={12} /> Ver comprobante
+        </a>
+      )}
+      {p.metodoPago === "qr" && !p.comprobanteUrl && (
+        <p className="mt-2 text-xs text-[var(--color-warning)]">Sin comprobante adjunto</p>
+      )}
+      {p.estado === "RESERVADO" && (
+        <p className="mt-2 flex items-center gap-1 text-xs text-[#8A6A1F]">
+          <Clock size={12} /> {tiempoRestante(p.reservaExpiraEn)}
+        </p>
+      )}
+    </>
+  );
+}
+
 export default function PedidosPage() {
   const { data: session } = useSession();
   const rol = (session?.user as any)?.role;
@@ -100,8 +158,8 @@ export default function PedidosPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
           <h1 className="font-display text-3xl font-medium">Pedidos</h1>
           <p className="text-sm text-gray-500 mt-1">{pedidos.length} en total</p>
@@ -122,91 +180,75 @@ export default function PedidosPage() {
             <p className="text-sm">Todavía no hay pedidos.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
-                <th className="p-4 font-semibold">Referencia</th>
-                <th className="p-4 font-semibold">Cliente</th>
-                <th className="p-4 font-semibold">Ítems</th>
-                <th className="p-4 font-semibold">Total</th>
-                <th className="p-4 font-semibold">Estado</th>
-                <th className="p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pedidos.map((p, i) => (
-                <tr key={p.id} className={`border-b border-[var(--color-line)] last:border-0 align-top ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}>
-                  <td className="p-4">
+          <>
+            {/* Celular: una tarjeta por pedido */}
+            <div className="md:hidden divide-y divide-[var(--color-line)]">
+              {pedidos.map((p) => (
+                <div key={p.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
                     <span className="inline-block font-mono-data font-bold text-sm px-2.5 py-1 rounded-md bg-[var(--color-ink)] text-white">
                       {p.referencia}
                     </span>
-                  </td>
-                  <td className="p-4 font-semibold text-base">{p.nombreInvitado ?? "—"}</td>
-                  <td className="p-4 text-gray-600">
+                    <div className="text-right">
+                      <span className="font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</span>
+                      {Number(p.costoEnvio) > 0 && (
+                        <p className="text-xs text-gray-500">incl. envío {p.departamentoEnvio} Bs {Number(p.costoEnvio).toFixed(2)}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="font-semibold">{p.nombreInvitado ?? "—"}</p>
+                  <div className="text-sm text-gray-600 space-y-0.5">
                     {p.items.map((it, idx) => (
                       <div key={idx}>{it.nombreSnapshot} {it.colorSnapshot} {it.tallaSnapshot} ×{it.cantidad}</div>
                     ))}
-                  </td>
-                  <td className="p-4">
-                    <span className="font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</span>
-                    {Number(p.costoEnvio) > 0 && (
-                      <p className="text-xs text-gray-500 mt-0.5">incl. envío {p.departamentoEnvio} Bs {Number(p.costoEnvio).toFixed(2)}</p>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <EstadoBadge estado={p.estado} />
-                    {p.comprobanteUrl && (
-                      <a
-                        href={p.comprobanteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
-                      >
-                        <Receipt size={12} /> Ver comprobante
-                      </a>
-                    )}
-                    {p.metodoPago === "qr" && !p.comprobanteUrl && (
-                      <p className="mt-2 text-xs text-[var(--color-warning)]">Sin comprobante adjunto</p>
-                    )}
-                    {p.estado === "RESERVADO" && (
-                      <p className="mt-2 flex items-center gap-1 text-xs text-[#8A6A1F]">
-                        <Clock size={12} /> {tiempoRestante(p.reservaExpiraEn)}
-                      </p>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-1.5 items-end">
-                      <button
-                        onClick={() => descargarRecibo(p)}
-                        className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--color-line)] text-gray-600 hover:bg-[var(--color-bg)] transition-colors whitespace-nowrap"
-                      >
-                        <FileText size={13} /> Recibo PDF
-                      </button>
-                      {SIGUIENTE_ESTADO[p.estado]?.map((opcion) => {
-                        const s = ESTADO_STYLE[opcion.valor];
-                        const Icon = opcion.icon;
-                        const esCancelar = opcion.valor === "CANCELADO";
-                        return (
-                          <button
-                            key={opcion.valor}
-                            onClick={() => cambiarEstado(p.id, opcion.valor)}
-                            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition-transform hover:scale-105 whitespace-nowrap"
-                            style={
-                              esCancelar
-                                ? { color: "var(--color-danger)", background: "var(--color-danger-light)" }
-                                : { color: s?.text ?? "#333", background: s?.bg ?? "#eee" }
-                            }
-                          >
-                            <Icon size={13} /> {opcion.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </td>
-                </tr>
+                  </div>
+                  <div><InfoEstado p={p} /></div>
+                  <Acciones p={p} onCambiar={cambiarEstado} />
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Pantallas medianas y grandes: tabla */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
+                    <th className="p-4 font-semibold">Referencia</th>
+                    <th className="p-4 font-semibold">Cliente</th>
+                    <th className="p-4 font-semibold">Ítems</th>
+                    <th className="p-4 font-semibold">Total</th>
+                    <th className="p-4 font-semibold">Estado</th>
+                    <th className="p-4"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedidos.map((p, i) => (
+                    <tr key={p.id} className={`border-b border-[var(--color-line)] last:border-0 align-top ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}>
+                      <td className="p-4">
+                        <span className="inline-block font-mono-data font-bold text-sm px-2.5 py-1 rounded-md bg-[var(--color-ink)] text-white">
+                          {p.referencia}
+                        </span>
+                      </td>
+                      <td className="p-4 font-semibold text-base">{p.nombreInvitado ?? "—"}</td>
+                      <td className="p-4 text-gray-600">
+                        {p.items.map((it, idx) => (
+                          <div key={idx}>{it.nombreSnapshot} {it.colorSnapshot} {it.tallaSnapshot} ×{it.cantidad}</div>
+                        ))}
+                      </td>
+                      <td className="p-4">
+                        <span className="font-mono-data font-bold text-lg text-[var(--color-ink)]">Bs {p.total}</span>
+                        {Number(p.costoEnvio) > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">incl. envío {p.departamentoEnvio} Bs {Number(p.costoEnvio).toFixed(2)}</p>
+                        )}
+                      </td>
+                      <td className="p-4"><InfoEstado p={p} /></td>
+                      <td className="p-4"><Acciones p={p} onCambiar={cambiarEstado} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

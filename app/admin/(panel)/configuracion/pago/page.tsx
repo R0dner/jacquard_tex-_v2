@@ -47,7 +47,10 @@ export default function ConfiguracionPagoPage() {
   }
   useEffect(cargar, []);
   useEffect(() => {
-    fetch("/api/configuracion/envios").then((r) => r.json()).then(setTarifas);
+    fetch("/api/configuracion/envios")
+      .then((r) => r.json())
+      .then((data) => setTarifas(Array.isArray(data) ? data : []))
+      .catch(() => setTarifas([]));
   }, []);
 
   function cambiarTarifa(id: number, cambios: Partial<TarifaEnvio>) {
@@ -97,7 +100,7 @@ export default function ConfiguracionPagoPage() {
 
   if (rol && rol !== "ADMIN_PRINCIPAL") {
     return (
-      <div className="p-8 max-w-xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-xl">
         <div className="bg-[var(--color-warning-light)] text-[var(--color-warning)] rounded-lg p-5 flex items-center gap-3">
           <ShieldAlert size={20} /> No tienes permiso para ver esta página.
         </div>
@@ -106,7 +109,7 @@ export default function ConfiguracionPagoPage() {
   }
 
   return (
-    <div className="p-8 max-w-xl space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-xl space-y-6">
       <div>
         <h1 className="font-display text-3xl font-medium flex items-center gap-2">
           <QrCode size={26} className="text-[var(--color-accent)]" /> Pago por QR
@@ -126,7 +129,7 @@ export default function ConfiguracionPagoPage() {
 
       <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-6 space-y-4">
         <h2 className="font-medium text-sm text-gray-700">Imagen del QR</h2>
-        <div className="flex items-start gap-5">
+        <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
           <div className="w-40 h-40 rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] flex items-center justify-center overflow-hidden shrink-0">
             {config?.qrImagenUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -190,7 +193,7 @@ export default function ConfiguracionPagoPage() {
           El cliente elige el departamento en el checkout y este costo se suma automáticamente al total a pagar.
         </p>
         {tarifas.map((t) => (
-          <div key={t.id} className="flex items-center gap-3">
+          <div key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="w-32 text-sm font-medium">{t.departamento}</span>
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-gray-500">Bs</span>

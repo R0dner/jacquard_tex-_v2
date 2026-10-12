@@ -19,6 +19,7 @@ export default function GaleriaProductosPage() {
   const [tallaSel, setTallaSel] = useState<number | null>(null);
   const [cargando, setCargando] = useState(true);
   const [slugAbierto, setSlugAbierto] = useState<string | null>(null);
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
 
   useEffect(() => {
     fetch("/api/colores").then((r) => r.json()).then(setColores);
@@ -38,18 +39,8 @@ export default function GaleriaProductosPage() {
 
   const hayFiltros = colorSel !== null || tallaSel !== null;
 
-  return (
-    <div>
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-line)] py-10">
-        <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Inicio / Tienda</p>
-          <h1 className="font-display text-5xl font-medium">Toda la colección</h1>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="flex gap-12">
-          <aside className="w-52 shrink-0 hidden md:block sticky top-24 self-start">
+  const filtros = (
+    <>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-1.5">
               <SlidersHorizontal size={13} /> Filtrar
             </p>
@@ -94,13 +85,41 @@ export default function GaleriaProductosPage() {
                 <X size={12} /> Limpiar filtros
               </button>
             )}
+          </>
+  );
+
+  return (
+    <div>
+      <div className="bg-[var(--color-bg)] border-b border-[var(--color-line)] py-6 sm:py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Inicio / Tienda</p>
+          <h1 className="font-display text-4xl sm:text-5xl font-medium">Toda la colección</h1>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="flex gap-12">
+          <aside className="w-52 shrink-0 hidden md:block sticky top-24 self-start">
+            {filtros}
           </aside>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
+            <div className="md:hidden mb-5">
+              <button
+                onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
+                className="w-full flex items-center justify-between border border-[var(--color-line)] rounded-lg px-4 py-3 text-sm font-medium bg-white"
+              >
+                <span className="flex items-center gap-2"><SlidersHorizontal size={15} /> Filtrar{hayFiltros ? " (activos)" : ""}</span>
+                <span className="text-gray-400">{filtrosAbiertos ? "−" : "+"}</span>
+              </button>
+              {filtrosAbiertos && (
+                <div className="border border-t-0 border-[var(--color-line)] rounded-b-lg p-4 bg-white">{filtros}</div>
+              )}
+            </div>
             <p className="text-sm text-gray-400 mb-6">{cargando ? "Cargando..." : `${productos.length} productos`}</p>
 
             {cargando ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="aspect-[3/4] bg-[var(--color-bg)] rounded-lg animate-pulse" />
                 ))}
@@ -108,7 +127,7 @@ export default function GaleriaProductosPage() {
             ) : productos.length === 0 ? (
               <p className="text-gray-400 text-sm py-12 text-center">No hay productos con esos filtros.</p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
                 {productos.map((p) => {
                   const portada = p.imagenes.find((i) => i.principal) ?? p.imagenes[0];
                   const enOferta = p.variantes.some((v) => v.enOferta && v.precioOferta);

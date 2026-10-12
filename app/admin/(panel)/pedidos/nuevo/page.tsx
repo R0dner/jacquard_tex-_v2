@@ -75,7 +75,7 @@ export default function NuevoPedidoPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto space-y-4">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-4">
       <div>
         <h1 className="font-display text-3xl font-medium">Nuevo pedido</h1>
         <p className="text-sm text-gray-500 mt-1">Registra una venta en tienda o por teléfono</p>
@@ -85,7 +85,7 @@ export default function NuevoPedidoPage() {
 
       <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-6 space-y-4">
         <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Cliente</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input className={inputClass} placeholder="Nombre del cliente" value={nombreInvitado} onChange={(e) => setNombreInvitado(e.target.value)} />
           <input className={inputClass} placeholder="Teléfono" value={telefonoInvitado} onChange={(e) => setTelefonoInvitado(e.target.value)} />
         </div>
@@ -110,7 +110,7 @@ export default function NuevoPedidoPage() {
         {productoElegido && (
           <div className="mt-3 border border-[var(--color-line)] rounded-lg p-4 bg-[var(--color-bg)]">
             <p className="text-xs text-gray-500 mb-2">Marca las combinaciones que quieres agregar:</p>
-            <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
               {productoElegido.variantes.map((v) => {
                 const marcada = variantesCheck.includes(v.sku);
                 return (
@@ -142,7 +142,7 @@ export default function NuevoPedidoPage() {
         {items.length > 0 && (
           <>
             <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mt-6 mb-4">Productos agregados</h2>
-            <table className="w-full text-sm mb-3">
+            <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm mb-3">
               <thead>
                 <tr className="text-left bg-[var(--color-bg)] text-xs text-gray-600 uppercase tracking-wide">
                   <th className="p-3 font-semibold">SKU</th>
@@ -168,7 +168,7 @@ export default function NuevoPedidoPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </>
         )}
       </div>

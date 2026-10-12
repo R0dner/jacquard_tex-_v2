@@ -1,20 +1,18 @@
-import Link from "next/link";
-import {
-  LayoutGrid, Shirt, ClipboardList, Boxes, Tags, Palette, Ruler, Users, LogOut, BarChart3, QrCode,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import { adminAuth, adminSignOut } from "@/auth-admin";
 import { puedeVerSeccion } from "@/lib/permisos";
 import { SessionProvider } from "next-auth/react";
+import { AdminShell, type NavItem } from "./admin-shell";
 
-const NAV = [
-  { href: "/admin", label: "Panel", icon: LayoutGrid },
-  { href: "/admin/productos", label: "Productos", icon: Shirt },
-  { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
-  { href: "/admin/inventario", label: "Inventario", icon: Boxes },
-  { href: "/admin/catalogo/categorias", label: "Categorías", icon: Tags },
-  { href: "/admin/catalogo/colores", label: "Colores", icon: Palette },
-  { href: "/admin/catalogo/tallas", label: "Tallas", icon: Ruler },
-  { href: "/admin/usuarios", label: "Usuarios", icon: Users },
+const NAV: NavItem[] = [
+  { href: "/admin", label: "Panel", icon: "LayoutGrid" },
+  { href: "/admin/productos", label: "Productos", icon: "Shirt" },
+  { href: "/admin/pedidos", label: "Pedidos", icon: "ClipboardList" },
+  { href: "/admin/inventario", label: "Inventario", icon: "Boxes" },
+  { href: "/admin/catalogo/categorias", label: "Categorías", icon: "Tags" },
+  { href: "/admin/catalogo/colores", label: "Colores", icon: "Palette" },
+  { href: "/admin/catalogo/tallas", label: "Tallas", icon: "Ruler" },
+  { href: "/admin/usuarios", label: "Usuarios", icon: "Users" },
 ];
 
 const ROL_LABEL: Record<string, string> = {
@@ -27,81 +25,32 @@ const ROL_LABEL: Record<string, string> = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await adminAuth();
   const rol = (session?.user as any)?.role as string | undefined;
-  const navFiltrado = NAV.filter((item) => puedeVerSeccion(rol, item.href));
+  const items: NavItem[] = NAV.filter((item) => puedeVerSeccion(rol, item.href));
+  if (rol === "ADMIN_PRINCIPAL") {
+    items.push({ href: "/admin/reportes", label: "Reportes", icon: "BarChart3" });
+    items.push({ href: "/admin/configuracion/pago", label: "Pago y envíos", icon: "QrCode" });
+  }
 
   return (
     <SessionProvider basePath="/api/auth-admin">
-      <div className="flex min-h-screen">
-        <aside className="w-60 shrink-0 bg-[var(--color-ink)] text-white flex flex-col">
-          <div className="px-5 py-5 border-b border-white/10">
-            <span className="font-semibold tracking-tight text-lg">Jacquard Tex</span>
-            <p className="text-xs text-white/50 mt-0.5">Panel de administración</p>
-          </div>
-          <nav className="flex-1 py-3">
-            {navFiltrado.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
-                >
-                  <Icon size={17} strokeWidth={1.75} className="opacity-80" />
-                  {item.label}
-                </Link>
-              );
-            })}
-            {rol === "ADMIN_PRINCIPAL" && (
-              <>
-                <Link
-                  href="/admin/reportes"
-                  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
-                >
-                  <BarChart3 size={17} strokeWidth={1.75} className="opacity-80" /> Reportes
-                </Link>
-                <Link
-                  href="/admin/configuracion/pago"
-                  className="flex items-center gap-3 px-5 py-2.5 text-sm text-white/75 hover:bg-[var(--color-ink-light)] hover:text-white transition-colors"
-                >
-                  <QrCode size={17} strokeWidth={1.75} className="opacity-80" /> Pago y envíos
-                </Link>
-              </>
-            )}
-          </nav>
-          <div className="px-5 py-4 border-t border-white/10 text-xs text-white/40">
-            Jacquard Tex © {new Date().getFullYear()}
-          </div>
-        </aside>
-
-        <div className="flex-1 min-w-0 flex flex-col">
-          <header className="h-14 border-b border-[var(--color-line)] bg-white flex items-center justify-end px-6 gap-4">
-            {session?.user && (
-              <>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center text-xs font-medium">
-                    {session.user.name?.charAt(0).toUpperCase() ?? "?"}
-                  </div>
-                  <div className="text-right leading-tight">
-                    <p className="text-sm font-medium">{session.user.name}</p>
-                    <p className="text-xs text-[var(--color-accent)]">{ROL_LABEL[rol ?? ""] ?? rol}</p>
-                  </div>
-                </div>
-                <div className="w-px h-8 bg-[var(--color-line)]" />
-                <form action={async () => { "use server"; await adminSignOut({ redirectTo: "/admin/login" }); }}>
-                  <button
-                    type="submit"
-                    title="Cerrar sesión"
-                    className="flex items-center justify-center w-9 h-9 rounded-full text-gray-400 hover:bg-[var(--color-danger-light)] hover:text-[var(--color-danger)] transition-colors"
-                  >
-                    <LogOut size={16} />
-                  </button>
-                </form>
-              </>
-            )}
-          </header>
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
-      </div>
+      <AdminShell
+        items={items}
+        userName={session?.user ? session.user.name ?? "" : null}
+        rolLabel={ROL_LABEL[rol ?? ""] ?? rol ?? ""}
+        cerrarSesion={
+          <form action={async () => { "use server"; await adminSignOut({ redirectTo: "/admin/login" }); }}>
+            <button
+              type="submit"
+              title="Cerrar sesión"
+              className="flex items-center justify-center w-9 h-9 rounded-full text-gray-400 hover:bg-[var(--color-danger-light)] hover:text-[var(--color-danger)] transition-colors"
+            >
+              <LogOut size={16} />
+            </button>
+          </form>
+        }
+      >
+        {children}
+      </AdminShell>
     </SessionProvider>
   );
 }

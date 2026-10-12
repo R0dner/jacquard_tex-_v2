@@ -66,8 +66,8 @@ export default function InventarioPage() {
   });
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
           <h1 className="font-display text-3xl font-medium">Inventario</h1>
           <p className="text-sm text-gray-500 mt-1">Historial y disponibilidad actual</p>
@@ -98,7 +98,7 @@ export default function InventarioPage() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-6 border-b border-[var(--color-line)]">
+      <div className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap border-b border-[var(--color-line)]">
         <button
           onClick={() => setTab("historial")}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === "historial" ? "border-[var(--color-accent)] text-[var(--color-accent)]" : "border-transparent text-gray-400"}`}
@@ -123,23 +123,23 @@ export default function InventarioPage() {
               <p className="text-sm">Todavía no hay movimientos.</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
               <thead>
                 <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
-                  <th className="p-4 font-semibold">Fecha</th>
-                  <th className="p-4 font-semibold">Tipo</th>
-                  <th className="p-4 font-semibold">Motivo</th>
-                  <th className="p-4 font-semibold">Ítems</th>
-                  <th className="p-4 font-semibold">Registrado por</th>
-                  <th className="p-4"></th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Fecha</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Tipo</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Motivo</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Ítems</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Registrado por</th>
+                  <th className="p-2.5 sm:p-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {movimientos.map((m, i) => (
                   <>
                     <tr key={`fila-${m.id}`} className={`border-b border-[var(--color-line)] last:border-0 ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}>
-                      <td className="p-4 text-gray-500">{new Date(m.fecha).toLocaleDateString()}</td>
-                      <td className="p-4">
+                      <td className="p-2.5 sm:p-4 text-gray-500">{new Date(m.fecha).toLocaleDateString()}</td>
+                      <td className="p-2.5 sm:p-4">
                         <span
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase"
                           style={
@@ -152,10 +152,10 @@ export default function InventarioPage() {
                           {m.tipo}
                         </span>
                       </td>
-                      <td className="p-4 font-medium">{m.motivo ?? "—"}</td>
-                      <td className="p-4 font-mono-data">{m.totalItems}</td>
-                      <td className="p-4 text-gray-600">{m.registradoPor?.nombre ?? "—"}</td>
-                      <td className="p-4">
+                      <td className="p-2.5 sm:p-4 font-medium">{m.motivo ?? "—"}</td>
+                      <td className="p-2.5 sm:p-4 font-mono-data">{m.totalItems}</td>
+                      <td className="p-2.5 sm:p-4 text-gray-600">{m.registradoPor?.nombre ?? "—"}</td>
+                      <td className="p-2.5 sm:p-4">
                         <div className="flex items-center gap-3 justify-end">
                           <button
                             onClick={() => setExpandido(expandido === m.id ? null : m.id)}
@@ -187,7 +187,7 @@ export default function InventarioPage() {
                   </>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       )}
@@ -205,14 +205,14 @@ export default function InventarioPage() {
           </div>
 
           <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
               <thead>
                 <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
-                  <th className="p-4 font-semibold">Producto</th>
-                  <th className="p-4 font-semibold">Color</th>
-                  <th className="p-4 font-semibold">Talla</th>
-                  <th className="p-4 font-semibold">SKU</th>
-                  <th className="p-4 font-semibold">Disponible</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Producto</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Color</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Talla</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">SKU</th>
+                  <th className="p-2.5 sm:p-4 font-semibold">Disponible</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,11 +220,11 @@ export default function InventarioPage() {
                   const bajo = v.stockActual <= v.stockMinimo;
                   return (
                     <tr key={v.sku} className={`border-b border-[var(--color-line)] last:border-0 ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}>
-                      <td className="p-4 font-medium">{v.producto}</td>
-                      <td className="p-4 text-gray-600">{v.color ?? "—"}</td>
-                      <td className="p-4 text-gray-600">{v.talla ?? "—"}</td>
-                      <td className="p-4 font-mono-data text-gray-500 text-xs">{v.sku}</td>
-                      <td className="p-4">
+                      <td className="p-2.5 sm:p-4 font-medium">{v.producto}</td>
+                      <td className="p-2.5 sm:p-4 text-gray-600">{v.color ?? "—"}</td>
+                      <td className="p-2.5 sm:p-4 text-gray-600">{v.talla ?? "—"}</td>
+                      <td className="p-2.5 sm:p-4 font-mono-data text-gray-500 text-xs">{v.sku}</td>
+                      <td className="p-2.5 sm:p-4">
                         <span
                           className={`font-mono-data px-2.5 py-1 rounded-md text-sm font-semibold ${
                             v.stockActual === 0
@@ -246,7 +246,7 @@ export default function InventarioPage() {
                   </tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       )}

@@ -140,8 +140,8 @@ export default function NuevoProductoPage() {
   const coloresUsados = colores.filter((c) => coloresSel.includes(c.id));
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-8">
         <h1 className="font-display text-3xl font-medium">Nuevo producto</h1>
         <button onClick={cancelar} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-[var(--color-danger)] transition-colors">
           <X size={15} /> Cancelar

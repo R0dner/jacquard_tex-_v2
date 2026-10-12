@@ -54,7 +54,7 @@ export default function EditarProductoPage() {
     fetch("/api/tallas").then((r) => r.json()).then(setTallas);
   }, []);
 
-  if (!producto) return <p className="p-8 text-gray-400">Cargando...</p>;
+  if (!producto) return <p className="p-4 sm:p-8 text-gray-400">Cargando...</p>;
 
   async function guardarDatos(e: React.FormEvent) {
     e.preventDefault();
@@ -110,7 +110,7 @@ export default function EditarProductoPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-medium">Editar producto</h1>
@@ -152,7 +152,7 @@ export default function EditarProductoPage() {
       </Seccion>
 
       <Seccion title="Variantes">
-        <table className="w-full text-sm mb-6">
+        <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm mb-6">
           <thead>
             <tr className="text-left bg-[var(--color-bg)] text-xs text-gray-600 uppercase tracking-wide">
               <th className="p-3 font-semibold">Color/Talla</th>
@@ -205,7 +205,7 @@ export default function EditarProductoPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
 
         <div className="border-t border-[var(--color-line)] pt-5">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Agregar color/talla nuevo</p>

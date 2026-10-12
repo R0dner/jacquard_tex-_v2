@@ -64,7 +64,7 @@ export default function CategoriasPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl space-y-6">
       <div>
         <h1 className="font-display text-3xl font-medium">Categorías y grupos</h1>
         <p className="text-sm text-gray-500 mt-1">Organiza tu catálogo y define prefijos de código</p>
@@ -102,7 +102,7 @@ export default function CategoriasPage() {
       <div className="space-y-4">
         {categorias.map((cat) => (
           <div key={cat.id} className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-5">
-            <div className="flex justify-between items-center mb-3 pb-3 border-b border-[var(--color-line)]">
+            <div className="flex flex-wrap gap-3 justify-between items-center mb-3 pb-3 border-b border-[var(--color-line)]">
               <h3 className="font-semibold text-base">{cat.nombre}</h3>
               <button onClick={() => borrarCategoria(cat.id)} className="text-gray-400 hover:text-[var(--color-danger)] transition-colors">
                 <Trash2 size={16} />

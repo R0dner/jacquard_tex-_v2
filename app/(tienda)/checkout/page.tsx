@@ -160,17 +160,17 @@ export default function CheckoutPage() {
   }
 
   if (items.length === 0) {
-    return <p className="text-center py-32 text-gray-400">Tu carrito está vacío.</p>;
+    return <p className="text-center py-16 sm:py-32 text-gray-400">Tu carrito está vacío.</p>;
   }
 
   const numEnvio = usuarioLogueado ? 1 : 2;
   const numPago = numEnvio + 1;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-14">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
       <h1 className="font-display text-4xl font-medium mb-10">Finalizar compra</h1>
 
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-3 gap-6 md:gap-10">
         <div className="md:col-span-2 space-y-6">
           {error && <p className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-light)] p-4 rounded-md">{error}</p>}
 
@@ -281,12 +281,12 @@ export default function CheckoutPage() {
               <span className="w-6 h-6 rounded-full bg-[var(--color-accent)] text-white text-xs flex items-center justify-center font-bold">{numPago}</span>
               <CreditCard size={16} className="text-[var(--color-accent)]" /> Método de pago
             </h2>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 sm:gap-3">
               {METODOS.map((m) => (
                 <button
                   key={m.valor}
                   onClick={() => setMetodoPago(m.valor)}
-                  className={`py-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                  className={`py-3 sm:py-4 rounded-xl text-sm font-semibold border-2 transition-all ${
                     metodoPago === m.valor
                       ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white shadow-md scale-[1.02]"
                       : "border-[var(--color-line)] bg-white text-gray-500 hover:border-[var(--color-accent)]/40"
@@ -347,7 +347,7 @@ export default function CheckoutPage() {
         </div>
 
         <div>
-          <div className="bg-[var(--color-bg)] rounded-xl p-6 sticky top-24">
+          <div className="bg-[var(--color-bg)] rounded-xl p-5 sm:p-6 md:sticky md:top-24">
             <h2 className="font-medium mb-4">Tu pedido</h2>
             <div className="space-y-2 mb-4 max-h-48 overflow-auto">
               {items.map((i) => (

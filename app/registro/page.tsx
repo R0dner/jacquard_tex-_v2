@@ -56,13 +56,13 @@ export default function RegistroPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center p-8 bg-[var(--color-bg)] relative overflow-hidden">
+      <div className="flex items-center justify-center p-5 sm:p-8 bg-[var(--color-bg)] relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--color-accent)]/5 blur-3xl" />
         <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
 
         <div className="w-full max-w-sm relative">
           <span className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest">Únete</span>
-          <h1 className="font-display text-4xl font-medium mt-2 mb-2 leading-tight">
+          <h1 className="font-display text-3xl sm:text-4xl font-medium mt-2 mb-2 leading-tight">
             Crea tu <span className="italic text-[var(--color-accent)]">cuenta</span>
           </h1>
           <p className="text-sm text-gray-500 mb-8">Guarda tus pedidos y compra más rápido la próxima vez</p>

@@ -48,8 +48,8 @@ export default function ListaProductosPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
           <h1 className="font-display text-3xl font-medium">Productos</h1>
           <p className="text-sm text-gray-500 mt-1">{productos.length} en catálogo</p>
@@ -73,15 +73,15 @@ export default function ListaProductosPage() {
             <p className="text-sm">Todavía no hay productos.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
             <thead>
               <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
-                <th className="p-4 font-semibold">Foto</th>
-                <th className="p-4 font-semibold">Código</th>
-                <th className="p-4 font-semibold">Nombre</th>
-                <th className="p-4 font-semibold">Stock total</th>
-                <th className="p-4 font-semibold">Activo</th>
-                <th className="p-4"></th>
+                <th className="p-2.5 sm:p-4 font-semibold">Foto</th>
+                <th className="p-2.5 sm:p-4 font-semibold">Código</th>
+                <th className="p-2.5 sm:p-4 font-semibold">Nombre</th>
+                <th className="p-2.5 sm:p-4 font-semibold">Stock total</th>
+                <th className="p-2.5 sm:p-4 font-semibold">Activo</th>
+                <th className="p-2.5 sm:p-4"></th>
               </tr>
             </thead>
             <tbody>
@@ -93,7 +93,7 @@ export default function ListaProductosPage() {
                     key={p.id}
                     className={`border-b border-[var(--color-line)] last:border-0 hover:bg-[var(--color-accent-light)]/40 transition-colors ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}
                   >
-                    <td className="p-4">
+                    <td className="p-2.5 sm:p-4">
                       {portada ? (
                         <img src={portada.url} className="w-14 h-14 object-cover rounded-md" />
                       ) : (
@@ -102,14 +102,14 @@ export default function ListaProductosPage() {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 font-mono-data text-gray-700 text-base">{p.codigo}</td>
-                    <td className="p-4 font-medium text-base">{p.nombre}</td>
-                    <td className="p-4">
+                    <td className="p-2.5 sm:p-4 font-mono-data text-gray-700 text-base">{p.codigo}</td>
+                    <td className="p-2.5 sm:p-4 font-medium text-base">{p.nombre}</td>
+                    <td className="p-2.5 sm:p-4">
                       <span className={`font-mono-data px-2.5 py-1 rounded-md text-sm font-medium ${stockTotal === 0 ? "bg-[var(--color-danger-light)] text-[var(--color-danger)]" : "bg-[var(--color-accent-light)] text-[var(--color-accent)]"}`}>
                         {stockTotal}
                       </span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2.5 sm:p-4">
                       <button
                         onClick={() => toggleActivo(p.id, p.activo)}
                         className={`relative w-11 h-6 rounded-full transition-colors ${p.activo ? "bg-[var(--color-accent)]" : "bg-gray-300"}`}
@@ -117,7 +117,7 @@ export default function ListaProductosPage() {
                         <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${p.activo ? "translate-x-5" : ""}`} />
                       </button>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2.5 sm:p-4">
                       <div className="flex justify-end gap-1.5">
                         <Link
                           href={`/admin/productos/${p.id}/editar`}
@@ -137,7 +137,7 @@ export default function ListaProductosPage() {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

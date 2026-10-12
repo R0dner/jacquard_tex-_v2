@@ -25,9 +25,9 @@ export default function ContactoPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-16">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16 grid md:grid-cols-2 gap-8 md:gap-16">
       <div>
-        <h1 className="font-display text-4xl font-medium mb-4">Hablemos</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-medium mb-4">Hablemos</h1>
         <p className="text-gray-500 mb-10">¿Tienes una pregunta sobre un pedido o quieres saber más de nuestras prendas? Escríbenos.</p>
 
         <div className="space-y-5">

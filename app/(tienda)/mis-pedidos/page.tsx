@@ -25,14 +25,14 @@ export default async function MisPedidosPage() {
 
   return (
     <div>
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-line)] py-10">
-        <div className="max-w-3xl mx-auto px-6">
-          <h1 className="font-display text-4xl font-medium">Mis pedidos</h1>
+      <div className="bg-[var(--color-bg)] border-b border-[var(--color-line)] py-6 sm:py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h1 className="font-display text-3xl sm:text-4xl font-medium">Mis pedidos</h1>
           <p className="text-gray-500 mt-1">Hola {session.user.name?.split(" ")[0]}, aquí está tu historial de compras</p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {pedidos.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 rounded-full bg-[var(--color-bg)] flex items-center justify-center mx-auto mb-5">
@@ -48,7 +48,7 @@ export default async function MisPedidosPage() {
             {pedidos.map((p) => {
               const s = ESTADO_STYLE[p.estado] ?? { bg: "#eee", text: "#666", dot: "#999" };
               return (
-                <div key={p.id} className="bg-white border border-[var(--color-line)] rounded-xl p-6 shadow-sm">
+                <div key={p.id} className="bg-white border border-[var(--color-line)] rounded-xl p-4 sm:p-6 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="inline-block font-mono-data font-bold text-sm px-2.5 py-1 rounded-md bg-[var(--color-ink)] text-white">

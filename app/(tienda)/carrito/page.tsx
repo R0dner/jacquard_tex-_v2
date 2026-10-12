@@ -8,7 +8,7 @@ export default function CarritoPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-32 text-center">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-32 text-center">
         <div className="w-20 h-20 rounded-full bg-[var(--color-bg)] flex items-center justify-center mx-auto mb-6">
           <ShoppingBag size={32} className="text-gray-300" />
         </div>
@@ -25,17 +25,17 @@ export default function CarritoPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-14">
-      <h1 className="font-display text-4xl font-medium mb-10">Tu carrito</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
+      <h1 className="font-display text-3xl sm:text-4xl font-medium mb-6 sm:mb-10">Tu carrito</h1>
 
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-3 gap-6 md:gap-10">
         <div className="md:col-span-2 divide-y divide-[var(--color-line)]">
           {items.map((item) => (
-            <div key={item.sku} className="flex gap-5 py-6">
-              <div className="w-28 h-28 bg-[var(--color-bg)] rounded-xl overflow-hidden shrink-0">
+            <div key={item.sku} className="flex gap-3 sm:gap-5 py-4 sm:py-6">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 bg-[var(--color-bg)] rounded-xl overflow-hidden shrink-0">
                 {item.imagen && <img src={item.imagen} className="w-full h-full object-cover" />}
               </div>
-              <div className="flex-1 flex flex-col justify-between">
+              <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
                 <div>
                   <div className="flex justify-between">
                     <h3 className="font-medium">{item.nombre}</h3>
@@ -47,13 +47,13 @@ export default function CarritoPage() {
                 </div>
                 <div className="flex justify-between items-end">
                   <div className="flex items-center border border-[var(--color-line)] rounded-full">
-                    <button onClick={() => actualizarCantidad(item.sku, Math.max(1, item.cantidad - 1))} className="w-8 h-8 flex items-center justify-center text-gray-500">
+                    <button onClick={() => actualizarCantidad(item.sku, Math.max(1, item.cantidad - 1))} className="w-9 h-9 flex items-center justify-center text-gray-500">
                       <Minus size={13} />
                     </button>
                     <span className="w-7 text-center text-sm font-medium">{item.cantidad}</span>
                     <button
                       onClick={() => actualizarCantidad(item.sku, Math.min(item.stockDisponible, item.cantidad + 1))}
-                      className="w-8 h-8 flex items-center justify-center text-gray-500"
+                      className="w-9 h-9 flex items-center justify-center text-gray-500"
                     >
                       <Plus size={13} />
                     </button>
@@ -66,7 +66,7 @@ export default function CarritoPage() {
         </div>
 
         <div>
-          <div className="bg-[var(--color-bg)] rounded-xl p-6 sticky top-24">
+          <div className="bg-[var(--color-bg)] rounded-xl p-5 sm:p-6 md:sticky md:top-24">
             <h2 className="font-medium mb-4">Resumen</h2>
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Subtotal</span>

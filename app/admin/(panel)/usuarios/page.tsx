@@ -68,7 +68,7 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl space-y-6">
       <div>
         <h1 className="font-display text-3xl font-medium flex items-center gap-2">
           <UsersIcon size={26} className="text-[var(--color-accent)]" /> Usuarios y roles
@@ -79,7 +79,7 @@ export default function UsuariosPage() {
       <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm p-6">
         <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Nuevo usuario</h2>
         {error && <p className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-light)] p-3 rounded-md mb-3">{error}</p>}
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <input className={inputClass} placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           <input className={inputClass} placeholder="Correo" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input className={inputClass} placeholder="Contraseña temporal" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -93,19 +93,19 @@ export default function UsuariosPage() {
       </div>
 
       <div className="bg-white border border-[var(--color-line)] rounded-lg shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto"><table className="min-w-[480px] w-full text-sm">
           <thead>
             <tr className="text-left bg-[var(--color-bg)] border-b border-[var(--color-line)] text-xs text-gray-600 uppercase tracking-wide">
-              <th className="p-4 font-semibold">Usuario</th>
-              <th className="p-4 font-semibold">Rol</th>
-              <th className="p-4 font-semibold">Estado</th>
-              <th className="p-4"></th>
+              <th className="p-2.5 sm:p-4 font-semibold">Usuario</th>
+              <th className="p-2.5 sm:p-4 font-semibold">Rol</th>
+              <th className="p-2.5 sm:p-4 font-semibold">Estado</th>
+              <th className="p-2.5 sm:p-4"></th>
             </tr>
           </thead>
           <tbody>
             {usuarios.map((u, i) => (
               <tr key={u.id} className={`border-b border-[var(--color-line)] last:border-0 ${i % 2 === 1 ? "bg-[var(--color-bg)]/50" : ""}`}>
-                <td className="p-4">
+                <td className="p-2.5 sm:p-4">
                   <div className="flex items-center gap-3">
                     <Avatar nombre={u.nombre} />
                     <div>
@@ -118,7 +118,7 @@ export default function UsuariosPage() {
                     </div>
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="p-2.5 sm:p-4">
                   <select
                     defaultValue={u.rol}
                     onChange={(e) => actualizar(u.id, "rol", e.target.value)}
@@ -128,7 +128,7 @@ export default function UsuariosPage() {
                     {ROLES.map((r) => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
                   </select>
                 </td>
-                <td className="p-4">
+                <td className="p-2.5 sm:p-4">
                   <button
                     onClick={() => actualizar(u.id, "activo", !u.activo)}
                     className={`relative w-11 h-6 rounded-full transition-colors ${u.activo ? "bg-[var(--color-accent)]" : "bg-gray-300"}`}
@@ -136,7 +136,7 @@ export default function UsuariosPage() {
                     <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${u.activo ? "translate-x-5" : ""}`} />
                   </button>
                 </td>
-                <td className="p-4">
+                <td className="p-2.5 sm:p-4">
                   <button
                     onClick={() => enviarRecuperacion(u.email)}
                     className="flex items-center gap-1.5 text-xs text-[var(--color-accent)] font-medium hover:underline ml-auto"
@@ -147,7 +147,7 @@ export default function UsuariosPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
